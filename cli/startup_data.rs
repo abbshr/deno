@@ -30,6 +30,10 @@ pub fn deno_isolate_init() -> StartupData<'static> {
   #[cfg(feature = "check-only")]
   let data = b"";
 
+  // ran-review: 3.2.1.
+  debug!("CLI_SNAPSHOT PATH: {:?}", concat!(env!("OUT_DIR"), "/CLI_SNAPSHOT.bin"));
+  debug!("startup_data.deno_isolate_init() -> data: {:?}", data);
+
   StartupData::Snapshot(Snapshot::Static(data))
 }
 
@@ -50,7 +54,7 @@ pub fn compiler_isolate_init() -> StartupData<'static> {
 
 #[cfg(not(feature = "no-snapshot-init"))]
 pub fn compiler_isolate_init() -> StartupData<'static> {
-  debug!("Deno isolate init with snapshots.");
+  debug!("Compiler isolate init with snapshots.");
   #[cfg(not(feature = "check-only"))]
   let data = COMPILER_SNAPSHOT;
   #[cfg(feature = "check-only")]

@@ -139,8 +139,15 @@ fn create_main_worker(
   global_state: GlobalState,
   main_module: ModuleSpecifier,
 ) -> Result<MainWorker, ErrBox> {
+  // ran-review: 3.1. 创建 state: State (cli/state.rs)
+  // - permissions: global_state.permissions.clone()
+  // - metrics: Metrics (cli/metrics.rs)
+  // - global_timer: GlobalTimer (cli/global_timer.rs)
+  // - workers: HashMap
   let state = State::new(global_state, None, main_module, false)?;
 
+  // ran-review: 3.2. 准备 startup data: StartupData (core/isolate.rs)
+  // ran-review: 3.3. 创建 worker: MainWorker (cli/worker.rs)
   let mut worker = MainWorker::new(
     "main".to_string(),
     startup_data::deno_isolate_init(),
@@ -155,6 +162,8 @@ fn create_main_worker(
     t.add("stderr", Box::new(stderr));
   }
 
+  // ran-review: 3.4. 执行 js 代码: `bootstrap.mainRuntime()`
+  // js bootstrap 对象来自 CLI_SNAPSHOT (cli/js), 由 cli/build.rs 构建生成
   worker.execute("bootstrap.mainRuntime()")?;
   Ok(worker)
 }
@@ -474,11 +483,24 @@ async fn run_repl(flags: Flags) -> Result<(), ErrBox> {
 }
 
 async fn run_command(flags: Flags, script: String) -> Result<(), ErrBox> {
+  debug!("call run_command");
+  debug!("flags: {:?}", &flags);
+  debug!("script: {:?}", &script);
+
+  // ran-review: 2. 创建 global_state: GlobalState (cli/global_state.rs)
+  // global_state 被所有 workers/isolate 共享
   let global_state = GlobalState::new(flags.clone())?;
-  let main_module = ModuleSpecifier::resolve_url_or_path(&script).unwrap();
+  // ran-review: 1. 创建 main_module: ModuleSpecifier (core/module_specifier.rs)
+  let main_module = ModuleSpecifier::resolve_url_or_path(&script)?;//.unwrap();
+  // ran-review: 3. 创建 worker: MainWorker (cli/worker.rs)
   let mut worker =
     create_main_worker(global_state.clone(), main_module.clone())?;
   debug!("main_module {}", main_module);
+  // ran-review: 4. 调用 worker.execute_module(&main_module)
+  // 异步加载 module 和其全部依赖:
+  // - (core/EsIsolate.load_module) worker.isolate.load_module(&main_module, code: None)
+  // 执行上一步已经实例化的 es module
+  // - (core/EsIsolate.mod_evaluate) worker.isolate.mod_evaluate(id: ModuleId)
   worker.execute_module(&main_module).await?;
   worker.execute("window.dispatchEvent(new Event('load'))")?;
   (&mut *worker).await?;
@@ -599,6 +621,7 @@ pub fn main() {
       install_command(flags, module_url, args, name, root, force).boxed_local()
     }
     DenoSubcommand::Repl => run_repl(flags).boxed_local(),
+    // ran-review: 0. 入口
     DenoSubcommand::Run { script } => run_command(flags, script).boxed_local(),
     DenoSubcommand::Test {
       fail_fast,
@@ -631,6 +654,8 @@ pub fn main() {
     _ => unreachable!(),
   };
 
+  // ran-review: 5. async run_command() 返回一个 fut: Future
+  // 这里通过 tokio 提供的 executor 执行 fut
   let result = tokio_util::run_basic(fut);
   if let Err(err) = result {
     let msg = format!(

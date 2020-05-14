@@ -235,7 +235,9 @@ pub struct MainWorker(Worker);
 impl MainWorker {
   pub fn new(name: String, startup_data: StartupData, state: State) -> Self {
     let state_ = state.clone();
+    // ran-review: 3.3.1. 创建 Worker
     let mut worker = Worker::new(name, startup_data, state_);
+    // ran-review: 3.3.2. 初始化 ops
     {
       let isolate = &mut worker.isolate;
       ops::runtime::init(isolate, &state);
