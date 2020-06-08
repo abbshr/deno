@@ -15,6 +15,7 @@ pub type JsonResult = Result<Value, OpError>;
 
 pub type AsyncJsonOp = Pin<Box<dyn Future<Output = JsonResult>>>;
 
+// ran-review: rust 侧 ops handler 的返回结果
 pub enum JsonOp {
   Sync(Value),
   Async(AsyncJsonOp),
@@ -44,6 +45,7 @@ struct AsyncArgs {
   promise_id: Option<u64>,
 }
 
+// ran-review: 对接收到的 `&[u8]` 类型的 arg 做转换为 `Value` 类型, 便于 ops handler 处理
 pub fn json_op<D>(
   d: D,
 ) -> impl Fn(&mut CoreIsolate, &[u8], Option<ZeroCopyBuf>) -> Op
@@ -62,6 +64,7 @@ where
       }
     };
     let promise_id = async_args.promise_id;
+    // ran-review: 通过是否有 promise_id 判断是否是同步消息
     let is_sync = promise_id.is_none();
 
     let result = serde_json::from_slice(control)
@@ -74,6 +77,7 @@ where
         assert!(promise_id.is_none());
         Op::Sync(serialize_result(promise_id, Ok(sync_value)))
       }
+      // ran-review: rust 侧 ops handler 对于异步操作, 返回 future
       Ok(JsonOp::Async(fut)) => {
         assert!(promise_id.is_some());
         let fut2 = fut.then(move |result| {

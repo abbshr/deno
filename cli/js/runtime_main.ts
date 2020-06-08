@@ -66,6 +66,7 @@ export const mainRuntimeGlobalProperties = {
 
 let hasBootstrapped = false;
 
+// ran-review: 3.4.2. 初始化 js 主运行环境
 export function bootstrapMainRuntime(): void {
   if (hasBootstrapped) {
     throw new Error("Worker runtime already bootstrapped");
@@ -80,6 +81,7 @@ export function bootstrapMainRuntime(): void {
   Object.defineProperties(globalThis, eventTargetProperties);
   Object.defineProperties(globalThis, mainRuntimeGlobalProperties);
   setEventTargetData(globalThis);
+  // ran-review: 3.4.3. globalThis 添加 "load"/"unload" 事件监听
   // Registers the handler for window.onload function.
   globalThis.addEventListener("load", (e) => {
     const { onload } = globalThis;
@@ -95,6 +97,7 @@ export function bootstrapMainRuntime(): void {
     }
   });
 
+  // ran-review: 3.4.4. 执行 `runtim.start()`, 获取 pid, cwd 等环境信息
   const { args, cwd, noColor, pid, repl, unstableFlag } = runtime.start();
 
   Object.defineProperties(denoNs, {

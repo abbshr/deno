@@ -164,6 +164,9 @@ fn create_main_worker(
 
   // ran-review: 3.4. 执行 js 代码: `bootstrap.mainRuntime()`
   // js bootstrap 对象来自 CLI_SNAPSHOT (cli/js), 由 cli/build.rs 构建生成
+  // 该方法最终执行 core/isolate.rs 的 `CoreIsolate::execute` 方法
+  // 并最先执行 `CoreIsolate::shared_init()` 方法, 该方法加载 core/core.js,
+  // core/core.js 提供了对 js 侧 `core` 对象的一系列补充, 便于 js 侧和 rust 侧实现通信.
   worker.execute("bootstrap.mainRuntime()")?;
   Ok(worker)
 }

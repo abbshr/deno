@@ -166,6 +166,7 @@ SharedQueue Binary Layout
   }
 
   function handleAsyncMsgFromRust(opId, buf) {
+    // ran-review: 当 SharedQueue 队列满时, 新的异步消息响应将通过 buf 参数传递, 否则使用更高效的共享内存区传递.
     if (buf) {
       // This is the overflow_response case of deno::Isolate::poll().
       asyncHandlers[opId](buf);

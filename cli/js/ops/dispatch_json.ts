@@ -56,6 +56,7 @@ export function asyncMsgFromRust(resUi8: Uint8Array): void {
   promise.resolve(res);
 }
 
+// ran-review: (ops). js 侧同步发送消息到 rust 侧
 export function sendSync(
   opName: string,
   args: object = {},
@@ -64,6 +65,8 @@ export function sendSync(
   const opId = OPS_CACHE[opName];
   util.log("sendSync", opName, opId);
   const argsUi8 = encode(args);
+  // ran-review: (ops). 调用 `core.dispatch`
+  // 内部实际调用 rust 侧绑定的函数`send`
   const resUi8 = core.dispatch(opId, argsUi8, zeroCopy);
   util.assert(resUi8 != null);
 

@@ -356,6 +356,7 @@ impl CoreIsolate {
     }
   }
 
+  // ran-review: js 侧 core.send 方法将调用这里
   pub fn dispatch_op<'s>(
     &mut self,
     scope: &mut impl v8::ToLocal<'s>,
@@ -363,7 +364,9 @@ impl CoreIsolate {
     control_buf: &[u8],
     zero_copy_buf: Option<ZeroCopyBuf>,
   ) -> Option<(OpId, Box<[u8]>)> {
+    // ran-review: 获取 rust 侧注册的 ops dispatcher, 并执行
     let op = if let Some(dispatcher) = self.op_registry.get(op_id) {
+      // ran-review: 实际调用 cli/state.rs 的 `State::stateful_json_op/_2()` 返回的闭包
       dispatcher(self, control_buf, zero_copy_buf)
     } else {
       let message =
@@ -374,13 +377,19 @@ impl CoreIsolate {
     };
 
     debug_assert_eq!(self.shared.size(), 0);
+    // ran-review: dispatcher 返回的结果有三种:
     match op {
+      // ran-review: 同步的 dispatcher, 直接返回结果
       Op::Sync(buf) => {
         // For sync messages, we always return the response via Deno.core.send's
         // return value. Sync messages ignore the op_id.
         let op_id = 0;
         Some((op_id, buf))
       }
+      // ran-review: 异步的 dispatcher
+      // dispatcher 返回一个 future
+      // 将 future 加入到 pending_ops stream 里
+      // 标记 have_unpolled_ops = true
       Op::Async(fut) => {
         let fut2 = fut.map(move |buf| (op_id, buf));
         self.pending_ops.push(fut2.boxed_local());
@@ -511,6 +520,10 @@ impl Future for CoreIsolate {
         Poll::Ready(None) => break,
         Poll::Pending => break,
         Poll::Ready(Some((op_id, buf))) => {
+          // ran-review: 当异步操作就绪后, 消息写到 `SharedQueue` 里
+          // 避免额外的拷贝
+          // SharedQueue 有固定长度限制, 当写满之后, push 返回 false, 并设置 overflow_response
+          // js 侧的 recv 回调函数的第二个参数(buf)将设置为异步操作的返回数据
           let successful_push = inner.shared.push(op_id, &buf);
           if !successful_push {
             // If we couldn't push the response to the shared queue, because
@@ -524,12 +537,14 @@ impl Future for CoreIsolate {
     }
 
     if inner.shared.size() > 0 {
+      // ran-review: 使用共享队列传递异步响应
       async_op_response(scope, None, js_recv_cb, js_error_create_fn)?;
       // The other side should have shifted off all the messages.
       assert_eq!(inner.shared.size(), 0);
     }
 
     if overflow_response.is_some() {
+      // ran-review: 使用 overflow_response 模式传递异步响应
       let (op_id, buf) = overflow_response.take().unwrap();
       async_op_response(
         scope,
@@ -559,6 +574,8 @@ impl Future for CoreIsolate {
   }
 }
 
+// ran-review: 异步消息的响应接口
+// 第二个参数为 overflow_response 模式下的响应体
 fn async_op_response<'s>(
   scope: &mut impl v8::ToLocal<'s>,
   maybe_buf: Option<(OpId, Box<[u8]>)>,
@@ -581,8 +598,10 @@ fn async_op_response<'s>(
         v8::Integer::new(scope, op_id as i32).into();
       let ui8: v8::Local<v8::Value> =
         bindings::boxed_slice_to_uint8array(scope, buf).into();
+        // ran-review: overflow_response 模式调用 js 侧注册的 recv 回调函数
       js_recv_cb.call(scope, context, global, &[op_id, ui8])
     }
+    // ran-review: 一般模式下调用 js 侧注册的 recv 回调函数
     None => js_recv_cb.call(scope, context, global, &[]),
   };
 

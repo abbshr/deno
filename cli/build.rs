@@ -45,6 +45,7 @@ fn main() {
   let bundle_path = o.join("CLI_SNAPSHOT.js");
   let snapshot_path = o.join("CLI_SNAPSHOT.bin");
 
+  // ran-review: 0.1.1 从 js/main.ts 创建 js 入口源码 bundle 到 {OUT_DIR}/CLI_SNAPSHOT.js
   let main_module_name = deno_typescript::compile_bundle(
     &bundle_path,
     root_names,
@@ -55,6 +56,7 @@ fn main() {
 
   let mut runtime_isolate = CoreIsolate::new(StartupData::None, true);
 
+  // ran-review: 0.1.2 从 bundle 创建 v8 snapshot 到 {OUT_DIR}/CLI_SNAPSHOT.bin
   deno_typescript::mksnapshot_bundle(
     &mut runtime_isolate,
     &snapshot_path,
@@ -68,6 +70,7 @@ fn main() {
   let bundle_path = o.join("COMPILER_SNAPSHOT.js");
   let snapshot_path = o.join("COMPILER_SNAPSHOT.bin");
 
+  // ran-review: 0.2. 从 js/compiler.ts 创建 ts 编译器的 js bundle 到 {OUT_DIR}/COMPILER_SNAPSHOT.js
   let main_module_name = deno_typescript::compile_bundle(
     &bundle_path,
     root_names,
@@ -78,6 +81,7 @@ fn main() {
 
   let mut runtime_isolate = CoreIsolate::new(StartupData::None, true);
 
+  // ran-review: 0.2.1. 添加 ts 声明文件 *.d.ts 到 snapshot
   let mut custom_libs: HashMap<String, PathBuf> = HashMap::new();
   custom_libs.insert(
     "lib.deno.window.d.ts".to_string(),
@@ -104,6 +108,7 @@ fn main() {
     deno_typescript::op_fetch_asset(custom_libs),
   );
 
+  // ran-review: 0.2.2. 从 ts 编译器的 bundle 创建 v8 snapshot 到 {OUT_DIR}/COMPILER_SNAPSHOT.bin
   deno_typescript::mksnapshot_bundle_ts(
     &mut runtime_isolate,
     &snapshot_path,

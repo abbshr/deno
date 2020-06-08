@@ -12,6 +12,7 @@ pub type Buf = Box<[u8]>;
 
 pub type OpAsyncFuture = Pin<Box<dyn Future<Output = Buf>>>;
 
+// ran-review: 表示 ops dispatcher 返回结果
 pub enum Op {
   Sync(Buf),
   Async(OpAsyncFuture),
@@ -20,10 +21,12 @@ pub enum Op {
   AsyncUnref(OpAsyncFuture),
 }
 
+// ran-review: ops handler
 /// Main type describing op
 pub type OpDispatcher =
   dyn Fn(&mut CoreIsolate, &[u8], Option<ZeroCopyBuf>) -> Op + 'static;
 
+// ran-review: ops handlers 维护在 `OpRegistry` 里
 #[derive(Default)]
 pub struct OpRegistry {
   dispatchers: Vec<Rc<OpDispatcher>>,

@@ -76,6 +76,7 @@ impl State {
     self.core_op(json_op(self.stateful_op(dispatcher)))
   }
 
+  // ran-review: 和上个方法区别: dispatcher 的第一个参数是 CoreIsolate
   pub fn stateful_json_op2<D>(
     &self,
     dispatcher: D,
@@ -92,6 +93,7 @@ impl State {
     self.core_op(json_op(self.stateful_op2(dispatcher)))
   }
 
+  // ran-review: core/isolate.rs 的 `CoreIsolate::dispatch_op` 里, dispatcher 为该方法返回值
   /// Wrap core `OpDispatcher` to collect metrics.
   // TODO(ry) this should be private. Is called by stateful_json_op or
   // stateful_minimal_op
@@ -194,6 +196,7 @@ impl State {
     Option<ZeroCopyBuf>,
   ) -> Result<JsonOp, OpError>
   where
+    // ran-review: ops handler 类型
     D: Fn(&State, Value, Option<ZeroCopyBuf>) -> Result<JsonOp, OpError>,
   {
     let state = self.clone();

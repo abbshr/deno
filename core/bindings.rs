@@ -425,6 +425,7 @@ fn recv(
   }
 
   let recv_fn = v8::Local::<v8::Function>::try_from(args.get(0)).unwrap();
+  // ran-review: js 侧传入的 `handleAsyncMsgFromRust` 函数被设置为 `core_isolate.js_recv_cb`
   core_isolate.js_recv_cb.set(scope, recv_fn);
 }
 
@@ -737,6 +738,7 @@ fn shared_getter(
   let core_isolate: &mut CoreIsolate =
     unsafe { &mut *(scope.isolate().get_data(0) as *mut CoreIsolate) };
 
+  // 映射 rust 侧的 `core_isolate.shared`, 以此创建 js 侧 SharedArrayBuffer
   // Lazily initialize the persistent external ArrayBuffer.
   if core_isolate.shared_ab.is_empty() {
     let ab = v8::SharedArrayBuffer::with_backing_store(

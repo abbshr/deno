@@ -10,6 +10,9 @@ use deno_core::ZeroCopyBuf;
 use std::env;
 
 pub fn init(i: &mut CoreIsolate, s: &State) {
+  // ran-review: rust 侧 ops 注册回调函数
+  // ops handler 逻辑通过 `State::stateful_json_op` 或 `State::stateful_json_op2` 包装成 dispatcher
+  // 通过这层封装, Isolate 可以对 ops 通信等进行统计, 并维护在 State 里
   i.register_op("op_start", s.stateful_json_op(op_start));
   i.register_op("op_metrics", s.stateful_json_op(op_metrics));
 }

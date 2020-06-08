@@ -11,6 +11,8 @@ delete (Object.prototype as any).__proto__;
 Object.defineProperties(globalThis, {
   bootstrap: {
     value: {
+      // ran-review: 3.4.1. js 逻辑入口
+      // 该方法存在于 snapshot 中, 因此可以直接调用
       mainRuntime: bootstrapMainRuntime,
       workerRuntime: bootstrapWorkerRuntime,
     },
