@@ -348,6 +348,7 @@ impl CoreIsolate {
   pub(crate) fn shared_init(&mut self) {
     if self.needs_init {
       self.needs_init = false;
+      // ran-review: 此处加载 core/core.js, 初始化 js 侧胶水层
       js_check(self.execute("core.js", include_str!("core.js")));
       // Maybe execute the startup script.
       if let Some(s) = self.startup_script.take() {
@@ -613,6 +614,7 @@ fn async_op_response<'s>(
   }
 }
 
+// ran-review: 处理 timer macrotask 回调
 fn drain_macrotasks<'s>(
   scope: &mut impl v8::ToLocal<'s>,
   js_macrotask_cb: &v8::Global<v8::Function>,

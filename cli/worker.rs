@@ -206,6 +206,7 @@ impl Future for Worker {
 
     // We always poll the inspector if it exists.
     let _ = inner.inspector().as_mut().map(|i| i.poll_unpin(cx));
+    // ran-review: 这里使用 AtomicWaker 保证并发 wake 时只 poll 一次
     inner.waker.register(cx.waker());
     inner.isolate.poll_unpin(cx)
   }

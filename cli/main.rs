@@ -494,7 +494,7 @@ async fn run_command(flags: Flags, script: String) -> Result<(), ErrBox> {
   // global_state 被所有 workers/isolate 共享
   let global_state = GlobalState::new(flags.clone())?;
   // ran-review: 1. 创建 main_module: ModuleSpecifier (core/module_specifier.rs)
-  let main_module = ModuleSpecifier::resolve_url_or_path(&script)?;//.unwrap();
+  let main_module = ModuleSpecifier::resolve_url_or_path(&script).unwrap();
   // ran-review: 3. 创建 worker: MainWorker (cli/worker.rs)
   let mut worker =
     create_main_worker(global_state.clone(), main_module.clone())?;

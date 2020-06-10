@@ -216,10 +216,9 @@ function setTimer(
   delay = Math.max(0, delay | 0);
 
   // Create a new, unscheduled timer object.
-  const timer = {
+  const timer: Timer = {
     id: nextTimerId++,
     callback,
-    args,
     delay,
     due: now + delay,
     repeat,
