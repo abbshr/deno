@@ -21,7 +21,7 @@ type ResourceMap = HashMap<ResourceId, (String, Box<dyn Resource>)>;
 #[derive(Default)]
 pub struct ResourceTable {
   map: ResourceMap,
-  next_id: u32,
+  next_id: ResourceId,
 }
 
 impl ResourceTable {
@@ -49,7 +49,7 @@ impl ResourceTable {
   fn next_rid(&mut self) -> ResourceId {
     let next_rid = self.next_id;
     self.next_id += 1;
-    next_rid as ResourceId
+    next_rid
   }
 
   pub fn add(&mut self, name: &str, resource: Box<dyn Resource>) -> ResourceId {
@@ -75,13 +75,13 @@ impl ResourceTable {
 
   pub fn remove<T: Resource>(&mut self, rid: ResourceId) -> Option<Box<T>> {
     if let Some((_name, resource)) = self.map.remove(&rid) {
-      let res = match resource.downcast::<T>() {
+      match resource.downcast::<T>() {
         Ok(res) => Some(res),
         Err(_e) => None,
-      };
-      return res;
+      }
+    } else {
+      None
     }
-    None
   }
 }
 
