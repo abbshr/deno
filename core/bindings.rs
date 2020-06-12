@@ -738,7 +738,7 @@ fn shared_getter(
   let core_isolate: &mut CoreIsolate =
     unsafe { &mut *(scope.isolate().get_data(0) as *mut CoreIsolate) };
 
-  // 映射 rust 侧的 `core_isolate.shared`, 以此创建 js 侧 SharedArrayBuffer
+  // ran-review: 映射 rust 侧的 `core_isolate.shared`, 以此创建 js 侧 SharedArrayBuffer
   // Lazily initialize the persistent external ArrayBuffer.
   if core_isolate.shared_ab.is_empty() {
     let ab = v8::SharedArrayBuffer::with_backing_store(
