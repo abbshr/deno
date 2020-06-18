@@ -505,8 +505,11 @@ async fn run_command(flags: Flags, script: String) -> Result<(), ErrBox> {
   // 执行上一步已经实例化的 es module
   // - (core/EsIsolate.mod_evaluate) worker.isolate.mod_evaluate(id: ModuleId)
   worker.execute_module(&main_module).await?;
+  warn!("main.rs worker.execute_module done");
   worker.execute("window.dispatchEvent(new Event('load'))")?;
+  warn!("before worker await");
   (&mut *worker).await?;
+  warn!("main.rs worker future done");
   worker.execute("window.dispatchEvent(new Event('unload'))")?;
   if global_state.flags.lock_write {
     if let Some(ref lockfile) = global_state.lockfile {

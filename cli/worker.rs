@@ -202,6 +202,7 @@ impl Future for Worker {
   type Output = Result<(), ErrBox>;
 
   fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
+    warn!("Worker::poll() called");
     let inner = self.get_mut();
 
     // We always poll the inspector if it exists.

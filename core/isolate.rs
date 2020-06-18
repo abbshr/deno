@@ -487,6 +487,7 @@ impl Future for CoreIsolate {
   type Output = Result<(), ErrBox>;
 
   fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
+    warn!("CoreIsolate::poll() called");
     let inner = self.get_mut();
     inner.waker.register(cx.waker());
     inner.shared_init();
@@ -515,6 +516,7 @@ impl Future for CoreIsolate {
       // Now handle actual ops.
       inner.have_unpolled_ops = false;
       #[allow(clippy::match_wild_err_arm)]
+      // ran-review: 此处会在流就绪唤醒当前任务
       match select(&mut inner.pending_ops, &mut inner.pending_unref_ops)
         .poll_next_unpin(cx)
       {
@@ -565,11 +567,16 @@ impl Future for CoreIsolate {
 
     // We're idle if pending_ops is empty.
     if inner.pending_ops.is_empty() {
+      warn!("core_isolate.rs CoreIsolate::poll() -> Ready");
       Poll::Ready(Ok(()))
     } else {
+      // ran-review: 在此期间有新的 ops 过来调用 dispatch_ops, 更新了 have_unpolled_ops = true
+      // 这里处理 unref ops 的情况, 因此再次唤醒任务
       if inner.have_unpolled_ops {
+        warn!("core_isolate.rs CoreIsolate::poll() has pending ops && have_unpolled_ops");
         inner.waker.wake();
       }
+      warn!("core_isolate.rs CoreIsolate::poll() -> Pending");
       Poll::Pending
     }
   }

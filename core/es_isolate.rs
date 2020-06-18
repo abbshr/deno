@@ -565,6 +565,7 @@ impl Future for EsIsolate {
   type Output = Result<(), ErrBox>;
 
   fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
+    warn!("EsIsolate::poll() called");
     let inner = self.get_mut();
 
     inner.waker.register(cx.waker());
@@ -579,6 +580,8 @@ impl Future for EsIsolate {
       assert!(poll_imports.is_ready());
     }
 
+    // ran-review: ready! macro, 如果 future 是 Pending 则直接函数返回
+    // https://docs.rs/futures-core/0.3.5/src/futures_core/task/poll.rs.html#5-11
     match ready!(inner.core_isolate.poll_unpin(cx)) {
       Ok(()) => {
         if inner.pending_dyn_imports.is_empty()
