@@ -1,0 +1,4 @@
+{
+    // 是否启用 Deno。
+    "deno.enable": true,
+}
