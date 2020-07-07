@@ -1,0 +1,14 @@
+{
+    // 总是在状态栏显示 Deno 图标。
+    "deno.alwaysShowStatus": true,
+    // 是否启用 Deno。
+    "deno.enable": true,
+    // import maps 文件的路径。
+    "deno.importmap": null,
+    // Enables logging of the Deno server to a file. This log can be used to diagnose Deno Server issues. The log may contain file paths, source code, and other potentially sensitive information from your project.
+    "deno.log": "terse",
+    // The location to tsconfig.json
+    "deno.tsconfig": null,
+    // Enable Deno unstable features.
+    "deno.unstable": true,
+}
